@@ -2,6 +2,9 @@ ctrl alt suppr # a verif
 
 Modif firewall rules active
 
+ptn d etes
+
+
 menu démarrer :
 	documents
 	downlaods
