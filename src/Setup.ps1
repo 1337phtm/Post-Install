@@ -30,10 +30,12 @@ param(
 # --- Logs ---
 #======================================================================
 
+$info = [System.IO.Path]::GetFileNameWithoutExtension($LogName)
+
 #function Start-Log {
 # --- Dossiers de logs ---
 $Global:WTKRoot = Join-Path $env:LOCALAPPDATA "Github - 1337phtm"
-$Global:LogDir = Join-Path $Global:WTKRoot "GLOBAL_Logs"
+$Global:LogDir = Join-Path $Global:WTKRoot "$($info)_Logs"
 
 foreach ($dir in @($Global:WTKRoot, $Global:LogDir)) {
     if (-not (Test-Path $dir)) {
@@ -42,7 +44,6 @@ foreach ($dir in @($Global:WTKRoot, $Global:LogDir)) {
 }
 
 # --- Fichiers de log ---
-$info = [System.IO.Path]::GetFileNameWithoutExtension($LogName)
 
 $Global:ScriptDir = Join-Path $Global:LogDir "$($info)_Logs"
 
