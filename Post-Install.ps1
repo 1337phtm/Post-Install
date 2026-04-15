@@ -57,7 +57,7 @@ param(
     [switch]$Test
 )
 
-. $PSScriptRoot\..\..\..\src\Setup.ps1 -LogName $PSCommandPath
+. $PSScriptRoot\src\Setup.ps1 -LogName $PSCommandPath
 
 function Write-Status {
     param(
