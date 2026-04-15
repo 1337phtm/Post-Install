@@ -1,8 +1,26 @@
-﻿#====================================================================================
-#   GLOBAL - Setup
-#   Auteur : 1337phtm
-#   Usage dans un script : . $PSScriptRoot\Setup.ps1 -LogName $PSCommandPath
-#====================================================================================
+﻿<#
+.SYNOPSIS
+    Setup.ps1
+    Setup pour chaque script (logs, affichage).
+
+.DESCRIPTION
+    Setup.ps1
+    A faire.
+
+.EXAMPLE
+    . $PSScriptRoot\Setup.ps1 -LogName $PSCommandPath
+    Usage basique dans un script.
+
+.NOTES
+    Auteur : 1337phtm
+    Version : 1.0
+    Compatibilité : Windows 11
+    Nécessite : PowerShell 5.1+
+
+.LINK
+    GitHub :
+    https://github.com/1337phtm/
+#>
 
 param(
     [string]$LogName
