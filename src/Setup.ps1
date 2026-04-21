@@ -34,10 +34,10 @@ $info = [System.IO.Path]::GetFileNameWithoutExtension($LogName)
 
 #function Start-Log {
 # --- Dossiers de logs ---
-$Global:WTKRoot = Join-Path $env:LOCALAPPDATA "Github - 1337phtm"
-$Global:LogDir = Join-Path $Global:WTKRoot "$($info)_Logs"
+$Global:MainLog = Join-Path $env:LOCALAPPDATA "Github - 1337phtm"
+$Global:ScriptLogDir = Join-Path $Global:MainLog "$($info)_Logs"
 
-foreach ($dir in @($Global:WTKRoot, $Global:LogDir)) {
+foreach ($dir in @($Global:MainLog, $Global:ScriptLogDir)) {
     if (-not (Test-Path $dir)) {
         New-Item -ItemType Directory -Path $dir | Out-Null
     }
@@ -45,16 +45,14 @@ foreach ($dir in @($Global:WTKRoot, $Global:LogDir)) {
 
 # --- Fichiers de log ---
 
-$Global:ScriptDir = Join-Path $Global:LogDir "$($info)_Logs"
-
-foreach ($ScriptDir in @($Global:ScriptDir)) {
+foreach ($ScriptDir in @($Global:ScriptLogDir)) {
     if (-not (Test-Path $ScriptDir)) {
         New-Item -ItemType Directory -Path $ScriptDir | Out-Null
     }
 }
 
-$Global:LogFile = Join-Path $Global:ScriptDir "$($info).log"
-$Global:ErrorLogFile = Join-Path $Global:ScriptDir "$($info).error.log"
+$Global:LogFile = Join-Path $Global:ScriptLogDir "$($info).log"
+$Global:ErrorLogFile = Join-Path $Global:ScriptLogDir "$($info).error.log"
 
 foreach ($file in @($Global:LogFile, $Global:ErrorLogFile)) {
     if (-not (Test-Path $file)) {
