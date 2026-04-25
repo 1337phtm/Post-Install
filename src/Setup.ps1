@@ -26,16 +26,17 @@ param(
     [string]$LogName
 )
 
+$Global:ErrorActionPreference = "Stop"
+
 #======================================================================
 # --- Logs ---
 #======================================================================
 
-$info = [System.IO.Path]::GetFileNameWithoutExtension($LogName)
+$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($LogName)
 
-#function Start-Log {
 # --- Dossiers de logs ---
 $Global:MainLog = Join-Path $env:LOCALAPPDATA "Github - 1337phtm"
-$Global:ScriptLogDir = Join-Path $Global:MainLog "$($info)_Logs"
+$Global:ScriptLogDir = Join-Path $Global:MainLog "$($ScriptName)_Logs"
 
 foreach ($dir in @($Global:MainLog, $Global:ScriptLogDir)) {
     if (-not (Test-Path $dir)) {
@@ -44,29 +45,112 @@ foreach ($dir in @($Global:MainLog, $Global:ScriptLogDir)) {
 }
 
 # --- Fichiers de log ---
-
-foreach ($ScriptDir in @($Global:ScriptLogDir)) {
-    if (-not (Test-Path $ScriptDir)) {
-        New-Item -ItemType Directory -Path $ScriptDir | Out-Null
-    }
-}
-
-$Global:LogFile = Join-Path $Global:ScriptLogDir "$($info).log"
-$Global:ErrorLogFile = Join-Path $Global:ScriptLogDir "$($info).error.log"
+$Global:LogFile = Join-Path $Global:ScriptLogDir "$($ScriptName).log"
+$Global:ErrorLogFile = Join-Path $Global:ScriptLogDir "$($ScriptName).error.log"
 
 foreach ($file in @($Global:LogFile, $Global:ErrorLogFile)) {
     if (-not (Test-Path $file)) {
         New-Item -ItemType File -Path $file | Out-Null
     }
 }
-#}
 
-Add-Content -Path $Global:LogFile -Value "" -Force
-Add-Content -Path $Global:LogFile -Value "" -Force
-$LogEntry = "Démarrage du script : $($LogName) - $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")"
-Add-Content -Path $Global:LogFile -Value $logEntry -Force
-Add-Content -Path $Global:LogFile -Value "" -Force
-Add-Content -Path $Global:LogFile -Value "" -Force
+#======================================================================
+# --- Rotate de Logs ---
+#======================================================================
+
+# --- Rotate si besoin ---
+$RunCountFile = Join-Path $Global:ScriptLogDir "run.count"
+if (-not (Test-Path $RunCountFile)) {
+    "0" | Out-File $RunCountFile -Encoding UTF8
+}
+
+#Essaye de décoder le contenu du fichier sinon réinitialise à 0
+try {
+    $RunCount = Get-Content $RunCountFile |
+    Where-Object { $_.Trim() -ne "" } |
+    Select-Object -First 1
+
+    $RunCount = [int]$RunCount
+}
+catch {
+    # Si le fichier est corrompu → on repart à zéro
+    $RunCount = 0
+    "0" | Out-File $RunCountFile -Encoding UTF8
+    Write-ErrorLog -Source "Setup | Start-Log" -Message "run.count corrupted, reset to 0." -Silent
+}
+
+$RunCount++
+$RunCount | Out-File $RunCountFile -Encoding UTF8
+
+# --- Rotation avancée de logs (3 fichiers max) ---
+function RotateLogs {
+    param(
+        [string]$FilePath
+    )
+
+    for ($i = 3; $i -ge 1; $i--) {
+        $old = "$FilePath.$i"
+        $new = "$FilePath." + ($i + 1)
+
+        if (Test-Path $old) {
+            if ($i -eq 3) {
+                Remove-Item $old -Force
+            }
+            else {
+                Rename-Item $old $new -Force
+            }
+        }
+    }
+
+    if (Test-Path $FilePath) {
+        Rename-Item $FilePath "$FilePath.1" -Force
+        New-Item -ItemType File -Path $FilePath | Out-Null
+    }
+}
+
+if ($RunCount -gt 150) {
+    RotateLogs -FilePath $Global:LogFile
+    RotateLogs -FilePath $Global:ErrorLogFile
+    "0" | Out-File $RunCountFile -Encoding UTF8
+}
+
+
+#======================================================================
+# --- Ecriture de logs ---
+#======================================================================
+function Write-Log {
+    param(
+        [string]$Message
+    )
+
+    Add-Content -Path $Global:LogFile -Value "$($Message)" -Force
+}
+
+function Write-ErrorLog {
+    param(
+        [string]$Message
+    )
+
+    Add-Content -Path $Global:ErrorLogFile -Value "$($Message)" -Force
+}
+
+#======================================================================
+# --- Start ---
+#======================================================================
+
+Write-Log -Message ""
+Write-Log -Message ""
+Write-Log -Message "Démarrage du script : $($LogName) - $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")"
+Write-Log -Message ""
+Write-Log -Message ""
+
+
+Write-ErrorLog -Message ""
+Write-ErrorLog -Message ""
+Write-ErrorLog -Message "Démarrage du script : $($LogName) - $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")"
+Write-ErrorLog -Message ""
+Write-ErrorLog -Message ""
+
 
 #======================================================================
 # --- Affichage ---
@@ -86,16 +170,11 @@ function Show-SectionHeader {
     Write-Host "║ $Title" -ForegroundColor Blue
     Write-Host "╚══════════════════════════════════════════╝" -ForegroundColor Blue
     Write-Host ""
-    $logEntry = ""
-    Add-Content -Path $Global:LogFile -Value $logEntry -Force
-    $logEntry = "╔══════════════════════════════════════════╗"
-    Add-Content -Path $Global:LogFile -Value $logEntry -Force
-    $logEntry = "║ $Title"
-    Add-Content -Path $Global:LogFile -Value $logEntry -Force
-    $logEntry = "╚══════════════════════════════════════════╝"
-    Add-Content -Path $Global:LogFile -Value $logEntry -Force
-    $logEntry = ""
-    Add-Content -Path $Global:LogFile -Value $logEntry -Force
+    Write-Log -Message ""
+    Write-Log -Message "╔══════════════════════════════════════════╗"
+    Write-Log -Message "║ $Title"
+    Write-Log -Message "╚══════════════════════════════════════════╝"
+    Write-Log -Message ""
 
 }
 
@@ -117,11 +196,10 @@ function Write-Status {
     }
 
     # LOG AUTOMATIQUE
-    $logEntry = "[$timestamp] [$Type] $Message"
-    Add-Content -Path $Global:LogFile -Value $logEntry -Force
+    Write-Log -Message "[$timestamp] [$Type] $Message"
 
     if ($Type -eq "ERROR") {
-        Add-Content -Path $Global:ErrorLogFile -Value $logEntry -Force
+        Write-ErrorLog -Message "[$timestamp] [$Type] $Message"
     }
 }
 
