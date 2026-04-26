@@ -83,7 +83,7 @@ $RunCount++
 $RunCount | Out-File $RunCountFile -Encoding UTF8
 
 # --- Rotation avancée de logs (3 fichiers max) ---
-function RotateLogs {
+function Local:RotateLogs {
     param(
         [string]$FilePath
     )
@@ -109,8 +109,8 @@ function RotateLogs {
 }
 
 if ($RunCount -gt 150) {
-    RotateLogs -FilePath $Global:LogFile
-    RotateLogs -FilePath $Global:ErrorLogFile
+    Local:RotateLogs -FilePath $Global:LogFile
+    Local:RotateLogs -FilePath $Global:ErrorLogFile
     "0" | Out-File $RunCountFile -Encoding UTF8
 }
 
