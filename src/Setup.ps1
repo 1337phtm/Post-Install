@@ -211,7 +211,3 @@ function Show-Counters {
     Write-Host "  → INFO    : $($Global:StatusCounters.INFO)`n" -ForegroundColor Cyan
     Write-Host "  📝 Logs    : $($Global:LogFile)`n" -ForegroundColor Gray
 }
-
-
-
-#Start-Log
