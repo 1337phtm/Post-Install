@@ -83,8 +83,6 @@ function Write-Status {
         Add-Content -Path $Global:ErrorLogFile -Value $logEntry -Force
     }
 }
-
-
 function Set-RegistryValueSafe {
     [CmdletBinding()]
     param(
