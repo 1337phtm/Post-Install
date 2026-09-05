@@ -585,6 +585,7 @@ Show-SectionHeader "🗑️ SUPPRESSSION DES BLOATWARES VIA WINGET"
 
 # Apps modernes WinGet
 $WingetApps = @(
+    #"Microsoft.Edge", pb désinstall exit code 532 (fonctionne via gui)
     "Microsoft Teams",
     "Microsoft OneDrive",
     "Clipchamp",
@@ -602,6 +603,7 @@ if (-not $User) {
                 Write-Status SKIP "$pkg déjà désinstallé"
             }
         }
+
         # widgets
         winget uninstall -e --id 9MSSGKG348SP --verbose | Out-Null
         $err = $LASTEXITCODE
