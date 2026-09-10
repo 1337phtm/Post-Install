@@ -142,7 +142,7 @@ else {
         if (-not $principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
             Write-Status INFO "Elevation requise. Relance en administrateur..."
             $allArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
-            if ($Test) { $allArgs += " -Test" }
+            if ($Test) { $allArgs += "-Test" }
             New-Item $restartMarker -ItemType File | Out-Null
             Start-Process powershell.exe -ArgumentList $allArgs -Verb RunAs -WorkingDirectory $PSScriptRoot
             exit
@@ -538,7 +538,7 @@ if (-not $User) {
             "Microsoft.XboxGamingOverlay",
             "Microsoft.XboxIdentityProvider",
             "Microsoft.XboxSpeechToTextOverlay",
-            "Microsoft.YourPhone",
+            "Microsoft.YourPhone"
             "Microsoft.ZuneMusic"
         )
 
@@ -585,7 +585,6 @@ Show-SectionHeader "🗑️ SUPPRESSSION DES BLOATWARES VIA WINGET"
 
 # Apps modernes WinGet
 $WingetApps = @(
-    #"Microsoft.Edge", pb désinstall exit code 532 (fonctionne via gui)
     "Microsoft Teams",
     "Microsoft OneDrive",
     "Clipchamp",
