@@ -1,4 +1,14 @@
-﻿<#
+﻿# Ajouter tout ce qui est clé gpo (via registre), stratégie de sécurité locale et stratégie de groupe
+
+#HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+#ShutdownWithoutLogon
+#REG_DWORD
+#1
+#1 : autoriser l’arrêt sans connexion.
+#0 : masquer l’option d’arrêt sur l’écran de connexion.
+
+
+<#
 .SYNOPSIS
     Script Post-Install Windows automatisé avec gestion des modes (Admin, User, Test),
     configuration système, confidentialité, sécurité, apparence, alimentation et optimisation.
