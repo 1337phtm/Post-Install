@@ -8,6 +8,11 @@
 #0 : masquer l’option d’arrêt sur l’écran de connexion.
 
 
+# ajouter tout ce qui est vérification d'événement avec :
+# Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4719 } -MaxEvents 50
+# stratégie de sécurité locale --> stratégies d'audit système
+
+
 <#
 .SYNOPSIS
     Script Post-Install Windows automatisé avec gestion des modes (Admin, User, Test),
