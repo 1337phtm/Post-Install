@@ -1,0 +1,53 @@
+Configuration ordinateur :
+
+[Paramètres Windows --> Stratégies de résolution de noms :]
+
+
+[Paramètres Windows --> Scripts (démarrage/arrêt) :]
+A voir 
+
+
+[Paramètres Windows --> Paramètres de sécurité :]
+cf. Stratégies de sécurité locale
+
+[Paramètres Windows --> QoS basée sur la stratégie :]
+
+
+
+[Modèles d'Administration --> Bureau :]
+Masquer et désactiver tous les éléments du Burea
+
+
+[Modèles d'Administration --> Composants Windows :]
+TROP LONG
+
+[Modèles d'Administration --> Imprimantes :]
+
+[Modèles d'Administration --> Menu démarrer et barre des tâches :]
+
+[Modèles d'Administration --> Panneau de configuration :]
+
+[Modèles d'Administration --> Réseau :]
+
+[Modèles d'Administration --> Serveur :]
+
+[Modèles d'Administration --> Système :]
+
+[Modèles d'Administration --> Tous les paramètres :]
+
+
+Configuration utilisateur :
+
+
+
+
+
+
+
+
+
+
+
+
+
+

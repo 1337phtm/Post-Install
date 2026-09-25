@@ -464,6 +464,8 @@ $Changes = @(
     @{Path = "HKLM:\SYSTEM\CurrentControlSet\Services\NlaSvc\Parameters\Internet"; Name = "EnableActiveProbing"; Value = 0; Description = "Sonde active NCSI (réseau)"; } # 0 = Désactivé
     @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors"; Name = "DisableLocation"; Value = 1; Description = "Géolocalisation système"; } # 1 = Désactivé
     @{Path = "HKCU:\Software\Microsoft\Clipboard"; Name = "CloudClipboardEnabled"; Value = 0; Description = "Synchronisation cloud presse-papiers"; } # 0 = Désactivé
+    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection"; Name = "AllowTelemetry"; Value = 0; Description = "Collecte de diagnostic"}
+    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection"; Name = "MaxTelemetryAllowed"; Value = 0; Description = "Collecte de diagnostic maximale"}
 )
 foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 
@@ -821,6 +823,7 @@ if (-not $Test) {
         Restart-Computer -Force
     }
     else {
+        Write-Host
         Write-Host "⚠️  Redémarrez manuellement ultérieurement`n" -ForegroundColor Yellow
     }
 }

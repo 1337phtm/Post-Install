@@ -1,0 +1,76 @@
+Stratégie de sécurité locale :
+
+[Stratégies de comptes --> Stratégies de mot de passe :]
+Le mot de passe doit respecter des exigences de complexité (longueur min : 6)
+Longueur minimale du mot de passe
+
+
+[Stratégies de comptes --> Stratégies de verrouillage du compte :]
+A voir 
+
+
+[Stratégies locales --> Stratégie d'audit :]
+A voir
+
+[Stratégies locales --> Attributions des droits utilisateurs :]
+(Arrêter le système)
+Autoriser l’ouverture de session par les services Bureau à distance
+Forcer l’arrêt à partir d’un système distant
+
+[Stratégies locales --> Options de sécurité :]
+Arrêt : permet au système d’être arrêté sans avoir à se connecter
+Comptes : renommer le compte Administrateur
+Comptes : bloquer les comptes Microsoft
+Ouverture de session interactive : afficher les informations relatives à l'utilisateur lorsque la session est verrouillée
+(Contrôle de compte d’utilisateur : configurer le type de mode d’approbation Administration)
+Contrôle de compte d’utilisateur : utiliser le mode Approbation administrateur pour le compte Administrateur intégré
+Contrôle de compte d’utilisateur : passer au Bureau sécurisé lors d’une demande d’élévation : Activé par POI
+Contrôle de compte d’utilisateur : comportement de l’invite d’élévation pour les administrateurs en mode d’approbation Administrateur
+Contrôle de compte d’utilisateur : comportement de l’invite d’élévation pour les administrateurs en mode de protection de privilèges élevés
+Contrôle de compte d'utilisateur : comportement de l'invite d'élévation pour les utilisateurs standard
+Contrôle de compte d’utilisateur : détecter les installations d’applications et demander l’élévation
+Contrôle de compte d’utilisateur : élever uniquement les applications UIAccess installées à des emplacements sécurisés
+Contrôle de compte d’utilisateur : activer le mode Approbation administrateur
+Ouverture de session interactive : contenu du message pour les utilisateurs essayant de se connecter
+Ouverture de session interactive : ne pas afficher le nom de l’utilisateur lors de la connexion
+Ouverture de session interactive : ne pas afficher le nom du dernier utilisateur connecté
+Ouverture de session interactive : ne pas demander la combinaison de touches Ctrl+Alt+Suppr
+Ouverture de session interactive : titre du message pour les utilisateurs essayant de se connecter
+Ouverture de session interactive : limite d’inactivité de l’ordinateur.
+Ouverture de session interactive : seuil de compte d'ordinateur.
+Périphériques : permettre le formatage et l’éjection des médias amovibles
+
+
+[Pare-feu Windows Defender avec fonctions avancées de sécurité]
+
+
+
+[Stratégies du gestionnaire de liste de réseaux]
+
+
+
+[Stratégies de contrôle de l'application]
+Applocker
+
+
+[Stratégies de sécurité IP sur Ordinateur]
+
+
+
+[Configurations avancée de la stratégie]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
