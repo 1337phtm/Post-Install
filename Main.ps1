@@ -114,9 +114,19 @@ function Set-RegistryValueSafe {
         return
     }
 
-    if ($Experimental -and $Test) {
-        Write-Status TEST "$Description ignorée"
-        return
+    if ($Test) {
+        # Mode -Test : on ne fait QUE les clés expérimentales
+        if (-not $Experimental) {
+            Write-Status SKIP "$Description ignorée (non expérimentale, mode -Test)"
+            return
+        }
+    }
+    else {
+        # Mode normal : on ne fait QUE les clés NON expérimentales
+        if ($Experimental) {
+            Write-Status SKIP "$Description ignorée (expérimentale, sans -Test)"
+            return
+        }
     }
 
     try {
@@ -126,7 +136,6 @@ function Set-RegistryValueSafe {
         }
         Set-ItemProperty -Path $Path -Name $Name -Value $Value -ErrorAction Stop
         Write-Status SUCCESS $Description
-
     }
     catch {
         if (-not (Test-Path $Path)) {
@@ -300,7 +309,7 @@ if (-not $User) {
             @{Cmd = @("SUB_NONE", "CONSOLELOCK", 1); Desc = "Verrouillage auto après veille (AC)"; } # 0 = Désactivé | 1 = Activé
         )
 
-        $DC = @(
+        $local:DC = @(
             @{Cmd = @("SUB_BUTTONS", "LIDACTION", 2); Desc = "Fermeture du capot (DC) → Hibernate"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
             @{Cmd = @("SUB_BUTTONS", "PBUTTONACTION", 2); Desc = "Bouton Marche/Arrêt (DC) → Hibernate"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
             @{Cmd = @("SUB_BUTTONS", "SBUTTONACTION", 2); Desc = "Bouton veille (DC) → Hibernate"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
@@ -317,7 +326,7 @@ if (-not $User) {
             }
         }
 
-        foreach ($item in $DC) {
+        foreach ($item in $local:DC) {
             try {
                 powercfg /setdcvalueindex SCHEME_CURRENT $($item.Cmd)
                 Write-Status SUCCESS $item.Desc
@@ -361,6 +370,14 @@ else {
     Write-Status USER "Modification des paramètres d'alimentation ignorée"
 }
 
+#======================================================================
+# Variable de registre :
+#======================================================================
+
+$DC = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection"
+$CC = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent" # Windows spotlight (windows à la une)
+$WS = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search"
+$Sys = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
 
 #======================================================================
 # Thèmes :
@@ -372,6 +389,20 @@ $Changes = @(
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"; Name = "SystemUsesLightTheme"; Value = 0; Description = "Thème Windows (mode sombre)"; } # Mode Clair pour Windows | # 0 : Sombre (non) | 1 : Clair (oui)
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"; Name = "EnableTransparency"; Value = 1; Description = "Transparence Windows"; } # Transparence | # 0 : Désactivé | 1 : Activé
     @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"; Name = "DisableStartupSound"; Value = 0; Description = "Son de démarrage"; } # Son de démarrage | # 0 : Activé | 1 : Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer"; Name = "NoDesktop"; Value = 0; Description = "Masquer et désactiver tous les éléments du Bureau"; } # 0 = Non | 1 = Oui
+    @{Path = $CC; Name = "DisableWindowsConsumerFeatures"; Value = 1; Description = "Désactiver les expériences grand public Microsoft"; } # 1 = Désactivé
+    @{Path = $CC; Name = "DisableSoftLanding"; Value = 1; Description = "Ne pas afficher les conseils Windows"; } # 1 = Désactivé
+    @{Path = $CC; Name = "DisableThirdPartySuggestions"; Value = 1; Description = "Ne pas suggérer d'applications tierces"; } # 1 = Désactivé
+    @{Path = $CC; Name = "DisableCloudOptimizedContent"; Value = 1; Description = "Désactiver le contenu optimisé par le cloud"; } # 1 = Désactivé
+    @{Path = $CC; Name = "DisableTailoredExperiencesWithDiagnosticData"; Value = 1; Description = "Pas d'expériences personnalisées via les données de diagnostic"; } # 1 = Désactivé
+    @{Path = $CC; Name = "ConfigureWindowsSpotlight"; Value = 2; Description = "Configurer Windows Spotlight"; } # 1 = Activé | 2 = Désactivé
+    @{Path = $CC; Name = "IncludeEnterpriseSpotlight"; Value = 0; Description = "Inclure le contenu Spotlight entreprise"; } # 0 = Non
+    @{Path = $CC; Name = "DisableWindowsSpotlightFeatures"; Value = 1; Description = "Désactiver les fonctionnalités Windows Spotlight"; } # 1 = Désactivé
+    @{Path = $CC; Name = "DisableSpotlightCollectionOnDesktop"; Value = 1; Description = "Désactiver la collection Spotlight sur le Bureau"; } # 1 = Désactivé
+    @{Path = $CC; Name = "DisableWindowsSpotlightOnActionCenter"; Value = 1; Description = "Spotlight dans le Centre de notifications"; } # 1 = Désactivé
+    @{Path = $CC; Name = "DisableWindowsSpotlightOnSettings"; Value = 1; Description = "Spotlight dans Paramètres"; } # 1 = Désactivé
+    @{Path = $CC; Name = "DisableWindowsSpotlightWindowsWelcomeExperience"; Value = 1; Description = "Spotlight dans l'expérience de bienvenue"; } # 1 = Désactivé
+
     # @{Path = "HKCU:\Control Panel\Desktop"; Name = "UserPreferencesMask"; Value = ([byte[]](0x90, 0x12, 0x03, 0x80, 0x10, 0x00, 0x00, 0x00)); Description = "Son de démarrage"; Experimental=$True;} # Désactivé animations Windows (profil agressif)
 )
 foreach ($item in $Changes) { Set-RegistryValueSafe @item }
@@ -389,6 +420,10 @@ $Changes = @(
     # @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "TaskbarBadges"; Value = 0; Description = "Badges d'applications"; } # 0 = Désactivé | 1 = Activé
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings"; Name = "TaskbarEndTask"; Value = 1; Description = "Activer 'Terminer la tâche' dans la barre des tâches"; } # 0 = Désactivé | 1 = Activé
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "TaskbarMn"; Value = 0; Description = "Widgets de la barre des tâches"; } # 0 = Désactivé | 1 = Activé
+    @{Path = $WS; Name = "AllowCloudSearch"; Value = 0; Description = "Autoriser la recherche dans le cloud"; } # 0 = Non
+    @{Path = $WS; Name = "AllowCortana"; Value = 0; Description = "Autoriser Cortana"; } # 0 = Non
+    @{Path = $WS; Name = "AllowCortanaAboveLock"; Value = 0; Description = "Autoriser Cortana au-dessus de l'écran de verrouillage"; } # 0 = Non
+    @{Path = $WS; Name = "AllowCortanaInAAD"; Value = 0; Description = "Page Cortana dans l'OOBE (compte AAD)"; } # 0 = Non
 )
 foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 
@@ -410,6 +445,7 @@ $Changes = @(
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "IconsOnly"; Value = 0; Description = "Miniatures au lieu d'icônes"; } # 0 = Miniatures | 1 = Icônes seulement
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "DisableThumbnailCache"; Value = 1; Description = "Cache miniatures"; } # 0 = Activé | 1 = Désactivé
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel"; Name = "{20D04FE0-3AEA-1069-A2D8-08002B30309D}"; Value = 1; Description = "Icône Ce PC sur bureau"; } # 0 = Affiché | 1 = Masqué
+    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FlyoutMenuSettings"; Name = "ShowHibernateOption"; Value = 1; Description = "Afficher 'Mise en veille prolongée' dans les options d'alimentation"; } # 0 = Masquer | 1 = Afficher
     # @{Path="HKCU:\Software\Classes\Directory\Background\shell\cmd"; Name="Extended"; Value=""; Description="Ajout cmd ici dans le menu contextuel";} # Optionnel
 )
 foreach ($item in $Changes) { Set-RegistryValueSafe @item }
@@ -420,15 +456,15 @@ foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 Show-SectionHeader "🏠 MENU DÉMARRER"
 
 $Changes = @(
-    # @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowDocuments"; Value = 1; Description = "Documents dans le menu Démarrer"; Experimental = $true; } # Expérimental
-    # @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowDownloads"; Value = 1; Description = "Downloads dans le menu Démarrer"; Experimental = $true; } # Expérimental
-    # @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowSettings"; Value = 1; Description = "Paramètres dans Start"; Experimental = $true; } # Expérimental
-    # @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowFileExplorer"; Value = 1; Description = "Bouton Explorateur dans Start"; Experimental = $true; } # Expérimental
-    # @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowPictures"; Value = 1; Description = "Pictures dans le menu Démarrer"; Experimental = $true; } # Expérimental
-    # @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowMusic"; Value = 1; Description = "Music dans le menu Démarrer"; Experimental = $true; } # Expérimental
-    # @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowVideos"; Value = 1; Description = "Videos dans le menu Démarrer"; Experimental = $true; } # Expérimental
-    # @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowHomegroup"; Value = 1; Description = "Téléchargements dans le menu Démarrer"; Experimental = $true; } # Expérimental
-    # @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowNetwork"; Value = 1; Description = "Network dans le menu Démarrer"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowDocuments"; Value = 1; Description = "Documents dans le menu Démarrer"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowDownloads"; Value = 1; Description = "Downloads dans le menu Démarrer"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowSettings"; Value = 1; Description = "Paramètres dans Start"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowFileExplorer"; Value = 1; Description = "Bouton Explorateur dans Start"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowPictures"; Value = 1; Description = "Pictures dans le menu Démarrer"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowMusic"; Value = 1; Description = "Music dans le menu Démarrer"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowVideos"; Value = 1; Description = "Videos dans le menu Démarrer"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowHomegroup"; Value = 1; Description = "Téléchargements dans le menu Démarrer"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowNetwork"; Value = 1; Description = "Network dans le menu Démarrer"; Experimental = $true; } # Expérimental
 
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search"; Name = "BingSearchEnabled"; Value = 0; Description = "Bing dans la recherche Windows"; } # 0 = Désactivé
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_Recommendations"; Value = 0; Description = "Recommandations d'applications dans le menu Démarrer"; } # 0 = Désactivé
@@ -441,7 +477,7 @@ foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 Show-SectionHeader "🔒 CONFIDENTIALITÉ & TÉLÉMÉTRIE"
 
 $Changes = @(
-    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search"; Name = "AllowCortana"; Value = 0; Description = "Désactiver Cortana"; } # 0 = Désactivé
+    @{Path = $WS; Name = "AllowCortana"; Value = 0; Description = "Désactiver Cortana"; } # 0 = Désactivé
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search"; Name = "CortanaConsent"; Value = 0; Description = "Consentement Cortana"; } # 0 = Désactivé
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "ShowSyncProviderNotifications"; Value = 0; Description = "Notifications pubs Explorateur"; } # 0 = Pas de pubs
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo"; Name = "Enabled"; Value = 0; Description = "ID publicitaire"; } # 0 = Désactivé
@@ -456,7 +492,7 @@ $Changes = @(
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"; Name = "SubscribedContent-353696Enabled"; Value = 0; Description = "Suggestions de contenu"; } # 0 = Désactivé
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\SearchSettings"; Name = "IsDeviceSearchHistoryEnabled"; Value = 0; Description = "Historique de recherche locale"; } # 0 = Désactivé
     @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System"; Name = "PublishUserActivities"; Value = 0; Description = "Historique d'activité envoyé au cloud"; } # 0 = Désactivé
-    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System (Publish)"; Name = "UploadUserActivities"; Value = 0; Description = "Upload de l'historique d'activité vers le cloud"; } # 0 = Désactivé
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System"; Name = "UploadUserActivities"; Value = 0; Description = "Upload de l'historique d'activité vers le cloud"; } # 0 = Désactivé
     @{Path = "HKLM:\SOFTWARE\Microsoft\PolicyManager\default\WiFi\AllowWiFiHotSpotReporting"; Name = "Value"; Value = 0; Description = "Partage des données Wi-Fi (Wi-Fi Sense - reporting)"; } # 0 = Désactivé
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Privacy"; Name = "UserActivityTracking"; Value = 0; Description = "Collecte des données d'utilisation des applications"; } # 0 = Désactivé
     @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Privacy"; Name = "LetAppsAccessDiagnosticInfo"; Value = 0; Description = "Bloquer l'accès des apps aux données de diagnostic"; } # 0 = Bloqué
@@ -464,8 +500,32 @@ $Changes = @(
     @{Path = "HKLM:\SYSTEM\CurrentControlSet\Services\NlaSvc\Parameters\Internet"; Name = "EnableActiveProbing"; Value = 0; Description = "Sonde active NCSI (réseau)"; } # 0 = Désactivé
     @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors"; Name = "DisableLocation"; Value = 1; Description = "Géolocalisation système"; } # 1 = Désactivé
     @{Path = "HKCU:\Software\Microsoft\Clipboard"; Name = "CloudClipboardEnabled"; Value = 0; Description = "Synchronisation cloud presse-papiers"; } # 0 = Désactivé
-    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection"; Name = "AllowTelemetry"; Value = 0; Description = "Collecte de diagnostic"}
-    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection"; Name = "MaxTelemetryAllowed"; Value = 0; Description = "Collecte de diagnostic maximale"}
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftAccount"; Name = "DisableUserAuth"; Value = 1; Description = "Bloquer l'authentification des comptes Microsoft grand public"; } # 0 = Autorisé | 1 = Bloqué
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive"; Name = "PreventNetworkTrafficPreUserSignIn"; Value = 1; Description = "Pas de trafic réseau OneDrive avant connexion à OneDrive"; } # 1 = Activé
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive"; Name = "DisableFileSyncNGSC"; Value = 1; Description = "Empêcher l'utilisation de OneDrive pour le stockage de fichiers"; } # 1 = Désactivé
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Dsh"; Name = "AllowNewsAndInterests"; Value = 0; Description = "Autoriser les widgets"; } # 0 = Non
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsAI"; Name = "DisableAIDataAnalysis"; Value = 1; Description = "Désactiver l'enregistrement d'instantanés (Recall)"; } # 1 = Désactivé
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsAI"; Name = "AllowRecallEnablement"; Value = 0; Description = "Autoriser l'activation de Recall"; } # 0 = Non ; À VÉRIFIER (récent)
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsAI"; Name = "DisableClickToDo"; Value = 1; Description = "Désactiver Click to Do"; } # 1 = Désactivé
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot"; Name = "TurnOffWindowsCopilot"; Value = 1; Description = "Désactiver Windows Copilot (ancienne stratégie)"; } # 1 = Désactivé
+    @{Path = $DC; Name = "AllowTelemetry"; Value = 0; Description = "Collecte de diagnostic" }
+    @{Path = $DC; Name = "MaxTelemetryAllowed"; Value = 0; Description = "Collecte de diagnostic maximale" }
+    @{Path = $DC; Name = "AllowDeviceNameInTelemetry"; Value = 0; Description = "Nom de l'appareil dans les données de diagnostic"; } # 0 = Non
+    @{Path = $DC; Name = "AllowBuildPreview"; Value = 0; Description = "Basculer le contrôle utilisateur sur les builds Insider"; } # 0 = Désactivé
+    @{Path = $DC; Name = "AllowCommercialDataPipeline"; Value = 0; Description = "Autoriser le pipeline de données commerciales"; } # 0 = Désactivé | 1 = Activé
+    @{Path = $DC; Name = "AllowDesktopAnalyticsProcessing"; Value = 0; Description = "Autoriser le traitement Desktop Analytics"; } # 0 = Désactivé | 1 = Activé
+    @{Path = $DC; Name = "AllowUpdateComplianceProcessing"; Value = 0; Description = "Autoriser le traitement Update Compliance"; } # 0 = Désactivé | 1 = Activé
+    @{Path = $DC; Name = "MicrosoftEdgeDataOptIn"; Value = 0; Description = "Collecte des données de navigation (Desktop Analytics)"; } # 0 = Désactivé
+    @{Path = $DC; Name = "DisableEnterpriseAuthProxy"; Value = 1; Description = "Ne pas utiliser le proxy authentifié pour la télémétrie"; } # 1 = Désactivé
+    @{Path = $DC; Name = "DisableOneSettingsDownloads"; Value = 1; Description = "Désactiver les téléchargements OneSettings"; } # 1 = Désactivé
+    @{Path = $DC; Name = "EnableOneSettingsAuditing"; Value = 0; Description = "Audit OneSettings"; } # 0 = Désactivé
+    @{Path = $DC; Name = "DoNotShowFeedbackNotifications"; Value = 1; Description = "Ne pas afficher les notifications de commentaires"; } # 1 = Masquer
+    @{Path = $DC; Name = "DisableTelemetryOptInChangeNotification"; Value = 1; Description = "Notifications de changement d'option de diagnostic"; } # 1 = Désactivé
+    @{Path = $DC; Name = "DisableTelemetryOptInSettingsUx"; Value = 1; Description = "Interface utilisateur des données de diagnostic (Paramètres)"; } # 1 = Désactivé
+    @{Path = $DC; Name = "LimitDiagnosticLogCollection"; Value = 1; Description = "Limiter la collecte des journaux de diagnostic"; } # 1 = Limité
+    @{Path = $DC; Name = "LimitDumpCollection"; Value = 1; Description = "Limiter la collecte des vidages mémoire"; } # 1 = Limité
+    @{Path = $DC; Name = "LimitEnhancedDiagnosticDataWindowsAnalytics"; Value = 1; Description = "Limiter les données de diagnostic avancées au minimum"; } # 1 = Limité
+    @{Path = $DC; Name = "DisableDiagnosticDataViewer"; Value = 1; Description = "Désactiver la visionneuse de données de diagnostic"; } # 0 = Activé | 1 = Désactivé
 )
 foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 
@@ -475,12 +535,32 @@ foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 Show-SectionHeader "🛡️ SÉCURITÉ WINDOWS"
 
 $Changes = @(
-    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"; Name = "DontDisplayLastUserName"; Value = 1; Description = "Nom du dernier utilisateur à l'écran de connexion"; } # 0 = Afficher | 1 = Masquer
     @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer"; Name = "NoDriveTypeAutoRun"; Value = 255; Description = "Exécution automatique (USB, CD, périphériques amovibles)"; Experimental = $true; } # 0x91 = Défaut | 255 = Désactivé
     @{Path = "HKLM:\SYSTEM\CurrentControlSet\Control\CI\Policy"; Name = "VerifiedAndReputablePolicyState"; Value = 0; Description = "Smart App Control"; } # 0 = Désactivé | 1 = Activé | 2 = Audit
-    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"; Name = "ConsentPromptBehaviorAdmin"; Value = 2; Description = "UAC au maximum (mot de passe obligatoire pour les admins)"; Experimental = $true; } # 0 = Désactivé | 5 = Moyen | 2 = Max
-    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"; Name = "PromptOnSecureDesktop"; Value = 1; Description = "UAC sur bureau sécurisé"; Experimental = $true; } # 0 = Désactivé | 1 = Activé
-    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"; Name = "DisableCAD"; Value = 0; Description = "Ctrl+Alt+Suppr pour la connexion"; Experimental = $true; } # 0 = Obligatoire | 1 = Non demandé
+    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\CredUI"; Name = "EnumerateAdministrators"; Value = 0; Description = "Énumérer les comptes admin lors de l'élévation"; } # 0 = Non | 1 = Oui
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System"; Name = "NoLocalPasswordResetQuestions"; Value = 1; Description = "Interdire les questions de sécurité pour les comptes locaux"; } # 1 = Interdit
+    @{Path = $Sys; Name = "DisplayLastLogonInfo"; Value = 0; Description = "Afficher les infos des ouvertures de session précédentes"; } # 0 = Non | 1 = Oui
+    @{Path = $Sys; Name = "DisableAutomaticRestartSignOn"; Value = 1; Description = "Désactiver la reconnexion auto après redémarrage (ARSO)"; } # 1 = Désactivé
+    @{Path = $Sys; Name = "ShutdownWithoutLogon"; Value = 1; Description = "Arrêt : arrêt possible sans ouverture de session"; } # 0 = Non | 1 = Oui
+    @{Path = $Sys; Name = "NoConnectedUser"; Value = 3; Description = "Comptes : bloquer les comptes Microsoft"; } # 0 = Non | 1 = Interdit d'ajouter | 3 = Interdit d'ajouter ET de se connecter
+    @{Path = $Sys; Name = "DontDisplayLockedUserId"; Value = 3; Description = "Session verrouillée : infos utilisateur affichées"; } # 1 = Nom complet+domaine | 2 = Nom complet seul | 3 = Ne rien afficher
+    @{Path = $Sys; Name = "DontDisplayUserName"; Value = 1; Description = "Ne pas afficher le nom d'utilisateur à la connexion"; } # 0 = Afficher | 1 = Masquer
+    @{Path = $Sys; Name = "DontDisplayLastUserName"; Value = 1; Description = "Ne pas afficher le nom du dernier utilisateur"; } # 0 = Afficher | 1 = Masquer
+    @{Path = $Sys; Name = "DisableCAD"; Value = 0; Description = "Exiger Ctrl+Alt+Suppr"; } # 0 = Obligatoire | 1 = Non demandé
+    @{Path = $Sys; Name = "LegalNoticeCaption"; Value = "Avertissement"; Description = "Titre du message d'ouverture de session"; } # À personnaliser
+    @{Path = $Sys; Name = "LegalNoticeText"; Value = "Accès réservé aux utilisateurs autorisés."; Description = "Contenu du message d'ouverture de session"; } # À personnaliser
+    @{Path = $Sys; Name = "InactivityTimeoutSecs"; Value = 0; Description = "Limite d'inactivité de l'ordinateur (secondes)"; } # 0 = Désactivé | 900 = 15 min
+    @{Path = $Sys; Name = "MaxDevicePasswordFailedAttempts"; Value = 0; Description = "Seuil de verrouillage du compte d'ordinateur (BitLocker)"; } # 0 = Désactivé
+    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"; Name = "AllocateDASD"; Value = "0"; Description = "Périphériques : formatage/éjection des médias amovibles"; } # REG_SZ : "0" = Admins | "1" = Admins + Power Users | "2" = Admins + Utilisateurs interactifs
+    @{Path = $Sys; Name = "EnableLUA"; Value = 1; Description = "UAC : activer le mode Approbation administrateur"; } # 0 = Désactivé | 1 = Activé (redémarrage requis)
+    @{Path = $Sys; Name = "FilterAdministratorToken"; Value = 1; Description = "UAC : mode Approbation admin pour le compte Administrateur intégré"; } # 0 = Non | 1 = Oui
+    @{Path = $Sys; Name = "PromptOnSecureDesktop"; Value = 1; Description = "UAC : passer au Bureau sécurisé lors d'une élévation"; } # 0 = Non | 1 = Oui
+    @{Path = $Sys; Name = "ConsentPromptBehaviorAdmin"; Value = 2; Description = "UAC : invite pour admins (mode Approbation administrateur)"; } # 0 = Sans invite | 1 = Identifiants (bureau sécurisé) | 2 = Consentement (bureau sécurisé) | 3 = Identifiants | 4 = Consentement | 5 = Consentement non-Windows
+    @{Path = $Sys; Name = "ConsentPromptBehaviorUser"; Value = 1; Description = "UAC : invite pour utilisateurs standard"; } # 0 = Refus auto | 1 = Identifiants (bureau sécurisé) | 3 = Identifiants
+    @{Path = $Sys; Name = "EnableInstallerDetection"; Value = 1; Description = "UAC : détecter les installations d'applications"; } # 0 = Non | 1 = Oui
+    @{Path = $Sys; Name = "EnableSecureUIAPaths"; Value = 1; Description = "UAC : élever uniquement les UIAccess installées en emplacements sécurisés"; } # 0 = Non | 1 = Oui
+    @{Path = $Sys; Name = "TypeOfAdminApprovalMode"; Value = 1; Description = "UAC : type de mode d'approbation Administrateur"; } # 1 = Hérité (classique) | 2 = Protection de l'administrateur ; À VÉRIFIER (25H2+)
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Connect"; Name = "RequirePinForPairing"; Value = 2; Description = "Code PIN requis pour le jumelage"; } # 0 = Jamais | 1 = Première fois | 2 = Toujours
 )
 foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 
@@ -491,9 +571,7 @@ Show-SectionHeader "⚙️ Paramètres"
 
 $Changes = @(
     # Mises à jour Microsoft Update (désactivé pour le moment)
-    # @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate"; Name = "DeferFeatureUpdatesPeriodInDays"; Value = 0; Description = "MàJ immédiate autres produits Microsoft"; } # Ne fonctionne pas encore
-    # @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update"; Name = "EnableFeaturedSoftware"; Value = 1; Description = "Activer Microsoft Update (autres produits Microsoft)"; }
-    # @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate"; Name = "BranchReadinessLevel"; Value = 48; Description = "Canal Current Branch (Office via WU)"; }
+    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update"; Name = "EnableFeaturedSoftware"; Value = 1; Description = "Activer Microsoft Update (autres produits Microsoft)"; } # 0 = Désactivé | 1 = Activé
     @{Path = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings"; Name = "RestartNotificationsAllowed2"; Value = 1; Description = "Avertir lors d'un redémarrage nécessaire"; } # 0 = Ne pas avertir | 1 = Avertir
 )
 foreach ($item in $Changes) { Set-RegistryValueSafe @item }
@@ -526,6 +604,8 @@ $Changes = @(
     @{Path = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Serialize"; Name = "WaitForIdleState"; Value = 0; Description = "Délai de démarrage des applications"; } # 0 = Activé | 1 = Désactivé
     @{Path = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Serialize"; Name = "StartupDelayInMSec"; Value = 0; Description = "Délai de démarrage des applications"; } # 0 = Désactivé | 1 = Activé
     @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"; Name = "VerboseStatus"; Value = 1; Description = "Mode Verbose Système"; } # 0 = Désactivé | 1 = Activé
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"; Name = "DisablePasswordSaving"; Value = 1; Description = "Ne pas autoriser l'enregistrement des mots de passe (RDP)"; } # 1 = Interdit
+
 )
 foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 
@@ -540,6 +620,9 @@ if (-not $User) {
         $AppxToRemove = @(
             "Microsoft.BingNews",
             "Microsoft.BingWeather",
+            "Microsoft.DEVHome",
+            "Microsoft.EdgeDevtoolsPlugin",
+            "Microsoft.GamingApp",
             "Microsoft.GetHelp",
             "Microsoft.Getstarted",
             "Microsoft.MicrosoftOfficeHub",
@@ -549,14 +632,22 @@ if (-not $User) {
             "Microsoft.PowerAutomateDesktop",
             "Microsoft.People",
             "Microsoft.SkypeApp",
+            "Microsoft.StartExperiencesApp",
             "Microsoft.Todos",
+            "Microsoft.WidgetsPlatformRuntime",
+            "Microsoft.WindowsAlarms",
+            "Microsoft.WindowsFeedbackHub",
+            "Microsoft.WindowsSoundRecorder",
             "Microsoft.Xbox.TCUI",
             "Microsoft.XboxGameOverlay",
             "Microsoft.XboxGamingOverlay",
             "Microsoft.XboxIdentityProvider",
             "Microsoft.XboxSpeechToTextOverlay",
-            "Microsoft.YourPhone"
-            "Microsoft.ZuneMusic"
+            "Microsoft.YourPhone",
+            "Microsoft.ZuneMusic",
+            "MicrosoftCorporationII.QuickAssist",
+            "MicrosoftWindows.CrossDevice",
+            "7EE7776C.LinkedInforWindows"
         )
 
         foreach ($app in $AppxToRemove) {
@@ -707,6 +798,7 @@ else {
 #======================================================================
 Show-SectionHeader "⏱️ TÂCHES PLANIFIÉES"
 
+
 $ScheduledTasksToDisable = @(
     "Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser",
     "Microsoft\Windows\Application Experience\ProgramDataUpdater",
@@ -729,15 +821,24 @@ $ScheduledTasksToDisable = @(
 )
 
 if (-not $User) {
-    foreach ($task in $ScheduledTasksToDisable) {
+    foreach ($fullPath in $ScheduledTasksToDisable) {
         try {
-            if (Get-ScheduledTask -TaskName $task -ErrorAction Stop) {
-                Disable-ScheduledTask -TaskName $task -ErrorAction Stop | Out-Null
-                Write-Status SUCCESS "Tâche désactivée : $task"
+            $parts = $fullPath.Split('\')
+            $taskName = $parts[-1]
+            $taskPath = "\" + ($parts[0..($parts.Count - 2)] -join '\') + "\"
+
+            $task = Get-ScheduledTask -TaskPath $taskPath -TaskName $taskName -ErrorAction Stop
+
+            if ($task.State -ne 'Disabled') {
+                Disable-ScheduledTask -InputObject $task | Out-Null
+                Write-Status SUCCESS "Tâche désactivée : $fullPath"
+            }
+            else {
+                Write-Status INFO "Déjà désactivée : $fullPath"
             }
         }
         catch {
-            Write-Status SKIP "Tâche absente ou protégée : $task"
+            Write-Status SKIP "Tâche absente ou protégée : $fullPath"
         }
     }
 }
@@ -760,7 +861,7 @@ else {
 }
 
 $Temp = @(
-    "$env:TEMP\*",
+    #"$env:TEMP\",
     "C:\Windows\Temp\*",
     "C:\Windows\SoftwareDistribution\Download\*",
     "$env:LOCALAPPDATA\Microsoft\OneDrive",

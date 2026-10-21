@@ -1,4 +1,4 @@
-# 🚀 Post‑Install — Optimisation & Configuration Automatisée de Windows
+# Post‑Install — Optimisation & Configuration Automatisée de Windows
 
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1%20%7C%207+-blue)
 ![License](https://img.shields.io/badge/License-MIT--Custom-green)
@@ -15,22 +15,26 @@ Le script inclut également un système de logs, une gestion intelligente des mo
 ## ✨ Fonctionnalités principales
 
 ### 🔑 Licence Windows
+
 - Détection de l’édition installée.
 - Proposition de mise à niveau vers **Windows Pro**.
 - Gestion automatique ou assistée selon le type de licence.
 
 ### ⚡ Alimentation
+
 - Activation de l’hibernation.
 - Configuration des actions du capot, bouton Power, veille.
 - Désactivation des timeouts inutiles.
 - Application du plan d’alimentation actif.
 
 ### 🎨 Apparence & Thèmes
+
 - Mode sombre (Apps + Windows).
 - Transparence.
 - Paramètres visuels essentiels.
 
 ### 📋 Barre des tâches
+
 - Alignement.
 - Icône de recherche.
 - Widgets.
@@ -38,6 +42,7 @@ Le script inclut également un système de logs, une gestion intelligente des mo
 - Bouton “Terminer la tâche”.
 
 ### 📁 Explorateur de fichiers
+
 - Extensions visibles.
 - Fichiers cachés visibles.
 - Miniatures activées.
@@ -47,10 +52,12 @@ Le script inclut également un système de logs, une gestion intelligente des mo
 - Icône “Ce PC”.
 
 ### 🏠 Menu Démarrer
+
 - Désactivation des recommandations.
 - Désactivation de Bing dans la recherche.
 
 ### 🔒 Confidentialité & Télémétrie
+
 - Désactivation de Cortana.
 - Désactivation de l’ID publicitaire.
 - Désactivation des suggestions Windows.
@@ -59,6 +66,7 @@ Le script inclut également un système de logs, une gestion intelligente des mo
 - Désactivation des sondes réseau NCSI.
 
 ### 🛡️ Sécurité Windows
+
 - UAC renforcé (optionnel).
 - Smart App Control.
 - Désactivation AutoRun.
@@ -66,6 +74,7 @@ Le script inclut également un système de logs, une gestion intelligente des mo
 - `Ctrl+Alt+Suppr` obligatoire.
 
 ### 🎮 Gaming
+
 - Désactivation de GameDVR.
 - Désactivation de la Xbox Game Bar.
 - Optimisations pour les performances.
@@ -135,6 +144,7 @@ Le script inclut également un système de logs, une gestion intelligente des mo
 ## 🧾 Journalisation
 
 Le script génère automatiquement :
+
 - un fichier de log complet,
 - un fichier d’erreurs séparé,
 - un compteur des actions (`SUCCESS`, `ERROR`, `SKIP`, `TEST`, `USER`).

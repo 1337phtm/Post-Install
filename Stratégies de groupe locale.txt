@@ -4,7 +4,7 @@ Configuration ordinateur :
 
 
 [Paramètres Windows --> Scripts (démarrage/arrêt) :]
-A voir 
+A voir
 
 
 [Paramètres Windows --> Paramètres de sécurité :]
@@ -15,15 +15,58 @@ cf. Stratégies de sécurité locale
 
 
 [Modèles d'Administration --> Bureau :]
-Masquer et désactiver tous les éléments du Burea
+Masquer et désactiver tous les éléments du Bureau
 
 
 [Modèles d'Administration --> Composants Windows :]
-TROP LONG
+Antivirus Microsoft defender : 
+	avoir
+Collecte de données et version d'évaluation Preview :
+	A peu pres tout 
+	Basculer le contrôle  utilisateur sur les builds insider
+	autoriser le pipelinde de donnés commerciales
+	autoriser le traitement analyses du bureau
+
+	du premier à config ID commercial (exclu)
+	
+	configurer l'interface utilisateur…
+Compte Microsoft :
+	TOUT
+Connexion :
+	code confidentiel pour le jumelage
+Contenu cloud :
+	tout
+Explorateur de fichier :
+	Afficher mettre en veille prolongée dans le menu Options d'alimentation
+Interface utilisateur d'informations :
+	Enumérer les comptes d'administratuer aux privilege seleves
+	empecher l'utilisation des questions de sécurité pour les comptes locaux
+OneDrive :
+	Empecher OneDrive de générer du trafic réseau tant que l'utilisateur ne s'est pas connecté a onedrive
+	Empecher l'utilisation de OneDrive pour le stockage de fichiers
+OOBE :	
+	ne pas lancer l'experience des parametres de confidentialité lors de l'ouverture de ssession utilisateur
+Option d'ouverture de session Windows :
+	Afficher les informations sur les ouvertures de session précédentes…. (pb car affiche user apres redemarrage...)
+Rechercher :
+	Autoriser la recherche dans le cloud
+	Autoriser Cortana
+	Autoriser cortana au dessus de lecran de verrouillage
+	Autoriser la page cortana dans OOBE sur un compte aad
+Service bureau à distance :
+	CClient connexion bureau a dsitance :
+		Ne pas autoriser l'enregistrement des mots de passe
+Widgets :
+
+Windows AI :
+Windows Update :
+
 
 [Modèles d'Administration --> Imprimantes :]
+RAS
 
 [Modèles d'Administration --> Menu démarrer et barre des tâches :]
+
 
 [Modèles d'Administration --> Panneau de configuration :]
 
