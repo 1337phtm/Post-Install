@@ -616,7 +616,6 @@ Show-SectionHeader "🗑️ SUPPRESSION DES BLOATWARES VIA APPX"
 
 if (-not $User) {
     if (-not $Test) {
-        # AppX classiques
         $AppxToRemove = @(
             "Microsoft.BingNews",
             "Microsoft.BingWeather",
