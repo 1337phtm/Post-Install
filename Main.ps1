@@ -619,7 +619,7 @@ if (-not $User) {
         $AppxToRemove = @(
             "Microsoft.BingNews",
             "Microsoft.BingWeather",
-            "Microsoft.DEVHome",
+            #"Microsoft.DEVHome",
             "Microsoft.EdgeDevtoolsPlugin",
             "Microsoft.GamingApp",
             "Microsoft.GetHelp",
